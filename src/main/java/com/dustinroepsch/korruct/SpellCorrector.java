@@ -18,6 +18,14 @@ public class SpellCorrector {
 
   private final Keyboard keyboard;
 
+  /**
+   * Creates an instance of a Spellcorrector that corrects words in the given wordFile, using the
+   * given keyboard as a heuristic. Only words that are valid in the keyboard will be corrected to.
+   *
+   * @param wordFile Path to a file containing line seperated words to correct to.
+   * @param keyboard A keyboard that is able to type the words.
+   * @throws IOException Invalid word file
+   */
   public SpellCorrector(Path wordFile, Keyboard keyboard) throws IOException {
     checkNotNull(wordFile);
     checkNotNull(keyboard);
@@ -33,6 +41,12 @@ public class SpellCorrector {
             .collect(ImmutableSet.toImmutableSet());
   }
 
+  /**
+   * Attemps to correct the given word to a word in the wordfile.
+   *
+   * @param word The word to correct.
+   * @return The corrected word if possible, otherwise Optional.empty().
+   */
   public Optional<String> getCorrection(String word) {
     checkNotNull(word);
     String sanitizedWord = word.trim().toLowerCase();

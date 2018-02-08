@@ -11,8 +11,10 @@ public class ExampleUsage {
   public static void main(String[] args) throws IOException {
     Keyboard keyboard = new QWERTYKeyboard();
 
+    // Create a spellCorrector with a US English (QWERTY) keyboard and a list of english words.
     SpellCorrector spellCorrector =
         new SpellCorrector(FileSystems.getDefault().getPath("enable1.txt"), keyboard);
+
     Scanner in = new Scanner(System.in);
 
     while (true) {
@@ -21,6 +23,8 @@ public class ExampleUsage {
       if (inputWord.trim().equals("q")) {
         break;
       }
+
+      // Attempt to correct the input word
       Optional<String> correction = spellCorrector.getCorrection(inputWord);
       System.out.println(correction.map(s -> "Did you mean: " + s).orElse("No typo!"));
     }
