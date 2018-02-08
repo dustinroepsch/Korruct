@@ -8,7 +8,7 @@ public abstract class Keyboard {
 
   public int getMinDistance(String wordA, String wordB) {
     return 0; // TODO: Use Dynamic Programming to figure out the least-distance way to get from
-              // wordA to wordB
+    // wordA to wordB
   }
 
   public abstract boolean isValidWord(String word);

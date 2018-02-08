@@ -44,7 +44,7 @@ public class SpellCorrector {
     return getVariations(sanitizedWord)
         .stream()
         .filter(validWords::contains)
-        .min(Comparator.comparingInt(a -> keyboard.getDistance(a, sanitizedWord)));
+        .min(Comparator.comparingInt(a -> keyboard.getMinDistance(a, sanitizedWord)));
   }
 
   private Set<String> getVariations(String word) {
