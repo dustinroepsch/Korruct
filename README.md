@@ -3,7 +3,7 @@ Korruct
 Korruct is a simple Spell Correcting library for Java.
 
 
-'''java
+```java
 public class ExampleUsage {
   public static void main(String[] args) throws IOException {
     Keyboard keyboard = new QWERTYKeyboard();
@@ -27,4 +27,4 @@ public class ExampleUsage {
     }
   }
 }
-''''
+```
