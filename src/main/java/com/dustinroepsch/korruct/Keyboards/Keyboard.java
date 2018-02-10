@@ -1,7 +1,7 @@
 package com.dustinroepsch.korruct.Keyboards;
 
-import java.util.List;
-import java.util.OptionalInt;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A Keyboard is a representation of a physical keyboard, used by SpellCorrector to evaluate
@@ -19,9 +19,39 @@ public abstract class Keyboard {
    * @param wordB
    * @return The minimum distance.
    */
-  public int getMinDistance(String wordA, String wordB) {
-    return 0; // TODO: Use Dynamic Programming to figure out the least-distance way to get from
-    // wordA to wordB
+  public double getMinDistance(String wordA, String wordB) {
+    return getMinDistanceRecur(wordA, wordB, 0, 0, new HashMap<>());
+  }
+
+  private double getMinDistanceRecur(
+      String wordA, String wordB, int wordAindex, int wordBindex, HashMap<IntPair, Double> memo) {
+    IntPair memoKey = IntPair.builder().setAIndex(wordAindex).setBIndex(wordBindex).build();
+    if (memo.containsKey(memoKey)) {
+      return memo.get(memoKey);
+    }
+
+    // albama
+    // alabama
+    if (wordAindex >= wordA.length() || wordBindex >= wordB.length()) {
+      return 0;
+    }
+
+    // insert
+    double insertCost = 1 + getMinDistanceRecur(wordA, wordB, wordAindex + 1, wordBindex, memo);
+
+    // delete
+    double deleteCost = 1 + getMinDistanceRecur(wordA, wordB, wordAindex, wordBindex + 1, memo);
+
+    // change
+    double changeCost =
+        getDistance(wordA.charAt(wordAindex), wordB.charAt(wordBindex)).getAsDouble()
+            + getMinDistanceRecur(wordA, wordB, wordAindex + 1, wordBindex + 1, memo);
+
+    double min = Math.min(insertCost, Math.min(deleteCost, changeCost));
+
+    memo.put(memoKey, min);
+
+    return min;
   }
 
   /**
@@ -44,24 +74,27 @@ public abstract class Keyboard {
    * @param charB
    * @return The euclidean distance, if possible.
    */
-  public OptionalInt getDistance(char charA, char charB) {
+  public OptionalDouble getDistance(char charA, char charB) {
     checkKeyboardSet();
-    boolean foundA = false;
-    boolean foundB = false;
-    for (char c : keys.toCharArray()) {
-      if (c == charA) {
-        foundA = true;
-      }
-      if (c == charB) {
-        foundB = true;
+
+    Optional<KeyboardPosition> aPosition = Optional.empty();
+    Optional<KeyboardPosition> bPosition = Optional.empty();
+
+    for (int row = 0; row < keyTable.length; row++) {
+      for (int col = 0; col < keyTable[row].length(); col++) {
+        if (keyTable[row].charAt(col) == charA) {
+          aPosition = Optional.of(KeyboardPosition.builder().setRow(row).setCol(col).build());
+        }
+        if (keyTable[row].charAt(col) == charB) {
+          bPosition = Optional.of(KeyboardPosition.builder().setRow(row).setCol(col).build());
+        }
       }
     }
 
-    if (!foundA || !foundB) {
-      return OptionalInt.empty();
+    if (aPosition.isPresent() && bPosition.isPresent()) {
+      return OptionalDouble.of(aPosition.get().getDistance(bPosition.get()));
     }
-
-    return OptionalInt.of(0); // TODO: Use keyTable to get the euclid distance between two keys.
+    return OptionalDouble.empty();
   }
 
   /**
@@ -77,5 +110,15 @@ public abstract class Keyboard {
       keyTable = getKeyboardLayout();
       keys = List.of(keyTable).stream().distinct().reduce("", (a, s) -> a + s);
     }
+  }
+
+  /**
+   * Returns a set of all characters in the keyboard.
+   *
+   * @return set of chars.
+   */
+  public Set<Character> getKeys() {
+    checkKeyboardSet();
+    return keys.chars().mapToObj(i -> (char) i).collect(Collectors.toSet());
   }
 }

@@ -13,7 +13,7 @@ public class ExampleUsage {
 
     // Create a spellCorrector with a US English (QWERTY) keyboard and a list of english words.
     SpellCorrector spellCorrector =
-        new SpellCorrector(FileSystems.getDefault().getPath("enable1.txt"), keyboard);
+        new SpellCorrector(FileSystems.getDefault().getPath("common_english_words.txt"), keyboard);
 
     Scanner in = new Scanner(System.in);
 

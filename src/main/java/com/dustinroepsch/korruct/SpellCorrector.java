@@ -7,9 +7,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,7 +41,7 @@ public class SpellCorrector {
   }
 
   /**
-   * Attemps to correct the given word to a word in the wordfile.
+   * Attempts to correct the given word to a word in the wordfile.
    *
    * @param word The word to correct.
    * @return The corrected word if possible, otherwise Optional.empty().
@@ -58,11 +57,76 @@ public class SpellCorrector {
     return getVariations(sanitizedWord)
         .stream()
         .filter(validWords::contains)
-        .min(Comparator.comparingInt(a -> keyboard.getMinDistance(a, sanitizedWord)));
+        .min(Comparator.comparingDouble(a -> keyboard.getMinDistance(a, sanitizedWord)));
   }
 
   private Set<String> getVariations(String word) {
-    // TODO: generate variations of the word
-    return Set.of(word);
+    List<StringSplit> splits = getSplits(word);
+
+    Set<String> variations = new HashSet<>();
+    splits.forEach(i -> variations.addAll(getEditDistanceOne(i)));
+    splits.forEach(i -> variations.addAll(getEditDistanceTwo(i)));
+    return variations;
+  }
+
+  private Set<String> getEditDistanceTwo(StringSplit split) {
+    return getEditDistanceOne(split)
+        .stream()
+        .map(this::getSplits)
+        .flatMap(Collection::stream)
+        .map(this::getEditDistanceOne)
+        .flatMap(Collection::stream)
+        .collect(Collectors.toSet());
+  }
+
+  private Set<String> getEditDistanceOne(StringSplit split) {
+    Set<String> editOne = new HashSet<>();
+    editOne.addAll(getInserts(split));
+    editOne.add(getDeletion(split));
+    editOne.addAll(getReplacements(split));
+
+    return editOne;
+  }
+
+  private List<StringSplit> getSplits(String word) {
+    List<StringSplit> splitList = new ArrayList<>();
+    for (int i = 0; i < word.length(); i++) {
+      splitList.add(
+          StringSplit.builder()
+              .setLeftHalf(word.substring(0, i))
+              .setRightHalf(word.substring(i))
+              .build());
+    }
+    return splitList;
+  }
+
+  private Set<String> getInserts(StringSplit split) {
+    return keyboard
+        .getKeys()
+        .stream()
+        .map(c -> split.leftHalf() + c + split.rightHalf())
+        .collect(Collectors.toSet());
+  }
+
+  private String getDeletion(StringSplit split) {
+    if (split.leftHalf().equals("")) {
+      return split.rightHalf();
+    }
+    return split.leftHalf().substring(0, split.leftHalf().length() - 1) + split.rightHalf();
+  }
+
+  private Set<String> getReplacements(StringSplit split) {
+    if (split.leftHalf().equals("")) {
+      return new HashSet<>();
+    }
+    return keyboard
+        .getKeys()
+        .stream()
+        .map(
+            c ->
+                split.leftHalf().substring(0, split.leftHalf().length() - 1)
+                    + c
+                    + split.rightHalf())
+        .collect(Collectors.toSet());
   }
 }
